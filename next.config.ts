@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    appDir: true
-  }
+  // 🔥 ここは今のNext.jsでは不要
+  // experimental: {
+  //   appDir: true,
+  // },
 };
 
 export default nextConfig;
