@@ -1,103 +1,126 @@
-import Image from "next/image";
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+
+type Entry = {
+  id: string
+  tag: string
+  value: number
+  note: string
+  created_at: string
+}
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [entries, setEntries] = useState<Entry[]>([])
+  const [tag, setTag] = useState('')
+  const [value, setValue] = useState<number | ''>('')
+  const [note, setNote] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // 🔄 データ読み込み
+  useEffect(() => {
+    const fetchEntries = async () => {
+      const { data, error } = await supabase
+        .from('entries')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('読み込みエラー:', error.message)
+        setErrorMessage('読み込みに失敗しました')
+      } else if (data) {
+        setEntries(data as Entry[])
+      }
+    }
+
+    fetchEntries()
+  }, [])
+
+  // ➕ データ送信
+  const handleSubmit = async () => {
+    setErrorMessage('')
+    if (!tag || value === '') {
+      setErrorMessage('タグと数値は必須です')
+      return
+    }
+
+    const { data, error } = await supabase.from('entries').insert([
+      {
+        tag,
+        value: Number(value),
+        note,
+      },
+    ])
+
+    if (error) {
+      console.error('挿入エラー:', error.message)
+      setErrorMessage('保存に失敗しました')
+    } else if (data) {
+      setTag('')
+      setValue('')
+      setNote('')
+      setEntries((prev) => [...(data as Entry[]), ...prev])
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-zinc-950 text-white p-6">
+      <h1 className="text-2xl font-bold mb-4">📘 記録アプリ v0.2.1（Supabase対応）</h1>
+
+      <div className="mb-4 space-y-2">
+        <input
+          type="text"
+          placeholder="タグ（例: 酒）"
+          value={tag}
+          onChange={(e) => setTag(e.target.value)}
+          className="w-full p-2 bg-zinc-800 text-white border border-zinc-700 rounded"
+        />
+        <input
+          type="number"
+          placeholder="数値（例: 16.8）"
+          value={value}
+          onChange={(e) => setValue(e.target.value === '' ? '' : Number(e.target.value))}
+          className="w-full p-2 bg-zinc-800 text-white border border-zinc-700 rounded"
+        />
+        <textarea
+          placeholder="メモ（例: ジムビーム350ml）"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          className="w-full p-2 bg-zinc-800 text-white border border-zinc-700 rounded"
+        />
+        <button
+          onClick={handleSubmit}
+          className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded"
+        >
+          Supabaseに記録する
+        </button>
+
+        {errorMessage && (
+          <p className="text-red-400 text-sm mt-2">{errorMessage}</p>
+        )}
+      </div>
+
+      <hr className="border-zinc-700 my-6" />
+
+      <div className="space-y-3">
+        {entries.map((entry) => (
+          <div
+            key={entry.id}
+            className="p-3 bg-zinc-800 rounded border border-zinc-700"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+            <div className="text-sm text-zinc-400">
+              {new Date(entry.created_at).toLocaleString()}
+            </div>
+            <div className="text-lg font-semibold">
+              {entry.tag}: {entry.value}
+            </div>
+            {entry.note && (
+              <div className="text-zinc-300">{entry.note}</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </main>
+  )
 }
