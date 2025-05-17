@@ -1,6 +1,12 @@
-
 'use client'
-export const dynamic = 'force-dynamic'
+export default function Home() {
+  return (
+    <main>
+      <h1>公開確認用</h1>
+      <p>これはVercelに公開されたページです。</p>
+    </main>
+  )
+}
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
