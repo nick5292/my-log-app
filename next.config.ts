@@ -1,10 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 🔥 ここは今のNext.jsでは不要
-  // experimental: {
-  //   appDir: true,
-  // },
+  output: "standalone", // ← 追加！
 };
 
 export default nextConfig;
