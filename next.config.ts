@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
-    appDir: true, // ← ★これが必要！
-  },
+    appDir: true
+  }
 };
 
 export default nextConfig;
